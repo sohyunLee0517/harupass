@@ -3,16 +3,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 사용자: 본인 문서만 읽기/쓰기, 관리자는 관리대상 문서 읽기
+    // 사용자: 누구나 읽기 (온보딩에서 관리자 이름 표시용), 본인만 쓰기
     match /users/{userId} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow create: if request.auth != null && request.auth.uid == userId;
       allow update: if request.auth != null && request.auth.uid == userId;
     }
 
-    // 초대코드: 인증된 사용자 읽기, 관리자만 생성
+    // 초대코드: 누구나 읽기 (가입 전 검증용), 인증된 사용자만 생성/수정
     match /inviteCodes/{code} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow create: if request.auth != null;
       allow update: if request.auth != null;
     }
