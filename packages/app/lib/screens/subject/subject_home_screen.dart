@@ -13,12 +13,6 @@ class SubjectHomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('하루패스 미션'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authProvider.notifier).signOut(),
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),

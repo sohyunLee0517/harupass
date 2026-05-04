@@ -1,30 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harupass/main.dart';
+import 'package:go_router/go_router.dart';
+import 'package:harupass/screens/onboarding/admin_signup_screen.dart';
 
 void main() {
   group('AdminSignupScreen', () {
-    Future<void> navigateToAdminSignup(WidgetTester tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(child: HaruPassApp()),
+    Widget buildScreen() {
+      final router = GoRouter(
+        initialLocation: '/admin-signup',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const Scaffold(body: Text('role_select')),
+          ),
+          GoRoute(
+            path: '/admin-signup',
+            builder: (_, _) => const AdminSignupScreen(),
+          ),
+        ],
       );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('관리자'));
-      await tester.pumpAndSettle();
+
+      return ProviderScope(
+        child: MaterialApp.router(routerConfig: router),
+      );
     }
 
-    testWidgets('shows form fields', (tester) async {
-      await navigateToAdminSignup(tester);
+    testWidgets('shows signup and login tabs', (tester) async {
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      expect(find.text('회원가입'), findsOneWidget);
+      expect(find.text('로그인'), findsOneWidget);
+    });
+
+    testWidgets('signup tab shows form fields', (tester) async {
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
 
       expect(find.text('별명'), findsOneWidget);
       expect(find.text('이메일'), findsOneWidget);
-      expect(find.text('중복확인'), findsOneWidget);
+      expect(find.text('비밀번호'), findsWidgets);
       expect(find.text('가입하기'), findsOneWidget);
     });
 
     testWidgets('validates empty nickname', (tester) async {
-      await navigateToAdminSignup(tester);
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text('가입하기'));
       await tester.pumpAndSettle();
@@ -33,7 +55,8 @@ void main() {
     });
 
     testWidgets('validates empty email', (tester) async {
-      await navigateToAdminSignup(tester);
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
 
       await tester.enterText(
         find.widgetWithText(TextFormField, '별명을 입력하세요'),
@@ -45,8 +68,9 @@ void main() {
       expect(find.text('이메일을 입력해주세요'), findsOneWidget);
     });
 
-    testWidgets('validates invalid email format', (tester) async {
-      await navigateToAdminSignup(tester);
+    testWidgets('validates password length', (tester) async {
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
 
       await tester.enterText(
         find.widgetWithText(TextFormField, '별명을 입력하세요'),
@@ -54,76 +78,62 @@ void main() {
       );
       await tester.enterText(
         find.widgetWithText(TextFormField, 'example@email.com'),
-        'notanemail',
+        'test@test.com',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, '6자 이상 입력하세요'),
+        '12345',
       );
       await tester.tap(find.text('가입하기'));
       await tester.pumpAndSettle();
 
-      expect(find.text('올바른 이메일 형식이 아닙니다'), findsOneWidget);
+      expect(find.text('비밀번호는 6자 이상이어야 합니다'), findsOneWidget);
     });
 
-    testWidgets('email duplicate check button works', (tester) async {
-      await navigateToAdminSignup(tester);
-
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'example@email.com'),
-        'test@test.com',
-      );
-      await tester.tap(find.text('중복확인'));
-      await tester.pump(const Duration(milliseconds: 600));
+    testWidgets('validates password confirmation mismatch', (tester) async {
+      await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
-
-      expect(find.text('사용 가능한 이메일입니다'), findsOneWidget);
-    });
-
-    testWidgets('shows snackbar if email not verified', (tester) async {
-      await navigateToAdminSignup(tester);
 
       await tester.enterText(
         find.widgetWithText(TextFormField, '별명을 입력하세요'),
-        'Test Admin',
+        'Test',
       );
       await tester.enterText(
         find.widgetWithText(TextFormField, 'example@email.com'),
         'test@test.com',
       );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, '6자 이상 입력하세요'),
+        '123456',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, '비밀번호를 다시 입력하세요'),
+        '654321',
+      );
       await tester.tap(find.text('가입하기'));
       await tester.pumpAndSettle();
 
-      expect(find.text('이메일 중복확인을 해주세요'), findsOneWidget);
+      expect(find.text('비밀번호가 일치하지 않습니다'), findsOneWidget);
     });
 
-    testWidgets('successful signup navigates to admin home', (tester) async {
-      await navigateToAdminSignup(tester);
-
-      await tester.enterText(
-        find.widgetWithText(TextFormField, '별명을 입력하세요'),
-        'Test Admin',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'example@email.com'),
-        'test@test.com',
-      );
-
-      // 중복확인 먼저
-      await tester.tap(find.text('중복확인'));
-      await tester.pump(const Duration(milliseconds: 600));
+    testWidgets('login tab shows form fields', (tester) async {
+      await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
 
-      // 가입
-      await tester.tap(find.text('가입하기'));
+      await tester.tap(find.text('로그인'));
       await tester.pumpAndSettle();
 
-      expect(find.text('관리자 모드'), findsOneWidget);
+      expect(find.text('로그인'), findsWidgets);
     });
 
     testWidgets('back button returns to role select', (tester) async {
-      await navigateToAdminSignup(tester);
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
 
       await tester.tap(find.byIcon(Icons.arrow_back));
       await tester.pumpAndSettle();
 
-      expect(find.text('어떤 역할로 시작하시겠어요?'), findsOneWidget);
+      expect(find.text('role_select'), findsOneWidget);
     });
   });
 }

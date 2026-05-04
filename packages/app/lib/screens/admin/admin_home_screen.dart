@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared/shared.dart';
 import '../../providers/auth_provider.dart';
 
@@ -46,9 +47,7 @@ class AdminHomeScreen extends ConsumerWidget {
               icon: Icons.group_add,
               title: '자녀 초대',
               subtitle: '초대코드를 생성하여 자녀를 추가하세요',
-              onTap: () {
-                // TODO: 초대코드 생성 화면
-              },
+              onTap: () => context.go('/admin/invite'),
             ),
             const SizedBox(height: 12),
             _AdminMenuCard(

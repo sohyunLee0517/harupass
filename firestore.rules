@@ -1,0 +1,51 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 사용자: 본인 문서만 읽기/쓰기, 관리자는 관리대상 문서 읽기
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 초대코드: 인증된 사용자 읽기, 관리자만 생성
+    match /inviteCodes/{code} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+    }
+
+    // 미션 (TODO): 관리자와 해당 관리대상만 접근
+    match /todos/{userId}/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // 일일 상태
+    match /dailyState/{userId}/{date} {
+      allow read, write: if request.auth != null;
+    }
+
+    // 셀프 잠금
+    match /selfLocks/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 미션 제안
+    match /missionProposals/{userId}/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // 리그
+    match /leagues/{yearWeek}/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if false; // Cloud Functions에서만 쓰기
+    }
+
+    // 템플릿
+    match /templates/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

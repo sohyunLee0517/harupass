@@ -6,6 +6,7 @@ import '../screens/onboarding/role_select_screen.dart';
 import '../screens/onboarding/admin_signup_screen.dart';
 import '../screens/onboarding/subject_join_screen.dart';
 import '../screens/admin/admin_home_screen.dart';
+import '../screens/admin/invite_code_screen.dart';
 import '../screens/subject/subject_home_screen.dart';
 import 'package:shared/shared.dart';
 
@@ -45,6 +46,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin',
         builder: (context, state) => const AdminHomeScreen(),
+        routes: [
+          GoRoute(
+            path: 'invite',
+            builder: (context, state) => const InviteCodeScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/subject',
