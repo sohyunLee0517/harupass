@@ -11,8 +11,7 @@ harupass/
 ├── analysis_options.yaml   # 공통 린트 설정
 └── packages/
     ├── shared/             # 공통 모델, 상수, 테마, 유틸리티
-    ├── admin_app/          # 관리자 앱 (com.harupass.admin)
-    └── subject_app/        # 관리대상 앱 (com.harupass.subject)
+    └── app/                # 하루패스 앱 (관리자/관리대상 통합)
 ```
 
 ## 기술 스택
@@ -28,7 +27,7 @@ harupass/
 - Flutter SDK >= 3.10.0
 - Dart SDK >= 3.11.5
 - Melos >= 7.5.0
-- Android Studio / VS Code
+- Android Studio + Android SDK
 - Java 17+ (Android 빌드용)
 
 ## 설치 및 실행
@@ -47,7 +46,7 @@ dart pub global activate melos
 ```
 
 > PATH에 `$HOME/.pub-cache/bin`이 포함되어 있는지 확인하세요.
-> 
+>
 > ```bash
 > export PATH="$PATH":"$HOME/.pub-cache/bin"
 > ```
@@ -58,18 +57,19 @@ dart pub global activate melos
 melos bootstrap
 ```
 
-이 명령어가 세 패키지(shared, admin_app, subject_app)의 의존성을 모두 설치합니다.
-
 ### 4. 앱 실행
 
 ```bash
-# 관리자 앱
-cd packages/admin_app
+cd packages/app
 flutter run
+```
 
-# 관리대상 앱
-cd packages/subject_app
-flutter run
+첫 화면에서 **관리자** 또는 **관리대상** 역할을 선택하여 진입합니다.
+
+### 5. 테스트 실행
+
+```bash
+melos run test    # 전체 테스트 (shared + app)
 ```
 
 ## Melos 스크립트
@@ -84,21 +84,14 @@ melos run clean      # 빌드 캐시 정리
 
 ### shared
 공통으로 사용되는 코드:
-- **models**: Firestore 데이터 모델 (User, Todo, Score, League 등)
+- **models**: Firestore 데이터 모델 (User, Todo, Score, SelfLock, League 등)
 - **constants**: 앱 상수, Firestore 경로
 - **theme**: 컬러 시스템, 앱 테마
 
-### admin_app (관리자 앱 - 하루패스)
-- 미션 등록 및 관리
-- 사진 인증 검수 (통과/반려)
-- 자녀 대시보드 및 통계
-- 초대코드 발급
-
-### subject_app (관리대상 앱 - 하루패스 미션)
-- 미션 확인 및 사진 인증 업로드
-- Custom Launcher + Lock Task Mode 잠금
-- 셀프 잠금 (자기통제 훈련)
-- 리그 랭킹
+### app (하루패스)
+단일 앱에서 역할 기반으로 분기:
+- **관리자 모드**: 미션 등록/관리, 사진 인증 검수, 자녀 초대, 통계
+- **관리대상 모드**: 미션 수행/사진 인증, 잠금 화면, 셀프 잠금, 리그 랭킹
 
 ## Firebase 설정 (TODO)
 
@@ -111,7 +104,8 @@ npm install -g firebase-tools
 # FlutterFire CLI 설치
 dart pub global activate flutterfire_cli
 
-# Firebase 설정 (각 앱 디렉토리에서)
+# Firebase 설정
+cd packages/app
 flutterfire configure
 ```
 

@@ -6,8 +6,7 @@ environment:
 
 workspace:
   - packages/shared
-  - packages/admin_app
-  - packages/subject_app
+  - packages/app
 
 dev_dependencies:
   melos: ^7.5.0

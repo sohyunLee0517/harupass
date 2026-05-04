@@ -29,12 +29,7 @@ scripts:
     exec:
       concurrency: 5
 
-  build:android:admin:
+  build:android:
     run: flutter build apk --release
     packageFilters:
-      scope: admin_app
-
-  build:android:subject:
-    run: flutter build apk --release
-    packageFilters:
-      scope: subject_app
+      scope: harupass
