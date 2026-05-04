@@ -17,12 +17,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
+      final isLoading = authState == AuthState.loading;
       final isAuth = authState == AuthState.authenticated;
       final isOnboarding = state.matchedLocation == '/' ||
           state.matchedLocation == '/admin-signup' ||
           state.matchedLocation == '/subject-join';
+      final isSplash = state.matchedLocation == '/splash';
 
-      if (!isAuth && !isOnboarding) return '/';
+      // 로딩 중이면 스플래시로
+      if (isLoading && !isSplash) return '/splash';
+      if (!isLoading && isSplash) {
+        if (isAuth) {
+          final user = authNotifier.user;
+          if (user?.role == UserRole.admin) return '/admin';
+          return '/subject';
+        }
+        return '/';
+      }
+
+      if (!isAuth && !isOnboarding && !isSplash) return '/';
       if (isAuth && isOnboarding) {
         final user = authNotifier.user;
         if (user?.role == UserRole.admin) return '/admin';
@@ -31,6 +44,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const _SplashScreen(),
+      ),
       GoRoute(
         path: '/',
         builder: (context, state) => const RoleSelectScreen(),
@@ -63,3 +80,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
+
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '하루패스',
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+            SizedBox(height: 24),
+            CircularProgressIndicator(),
+          ],
+        ),
+      ),
+    );
+  }
+}
