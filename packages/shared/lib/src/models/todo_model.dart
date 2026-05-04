@@ -1,13 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'todo_model.g.dart';
 
 enum TodoStatus { pending, submitted, approved, rejected }
 
 enum TodoCreator { admin, subject }
 
-@JsonSerializable()
 class TodoModel {
   final String id;
   final String title;
@@ -31,9 +27,34 @@ class TodoModel {
     this.createdBy = TodoCreator.admin,
   });
 
-  factory TodoModel.fromJson(Map<String, dynamic> json) =>
-      _$TodoModelFromJson(json);
-  Map<String, dynamic> toJson() => _$TodoModelToJson(this);
+  factory TodoModel.fromJson(Map<String, dynamic> json) => TodoModel(
+        id: json['id'] as String,
+        title: json['title'] as String,
+        description: json['description'] as String?,
+        status: TodoStatus.values.byName(json['status'] as String? ?? 'pending'),
+        photoUrl: json['photoUrl'] as String?,
+        submittedAt: json['submittedAt'] != null
+            ? DateTime.parse(json['submittedAt'] as String)
+            : null,
+        reviewedAt: json['reviewedAt'] != null
+            ? DateTime.parse(json['reviewedAt'] as String)
+            : null,
+        rejectReason: json['rejectReason'] as String?,
+        createdBy:
+            TodoCreator.values.byName(json['createdBy'] as String? ?? 'admin'),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'description': description,
+        'status': status.name,
+        'photoUrl': photoUrl,
+        'submittedAt': submittedAt?.toIso8601String(),
+        'reviewedAt': reviewedAt?.toIso8601String(),
+        'rejectReason': rejectReason,
+        'createdBy': createdBy.name,
+      };
 
   factory TodoModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;

@@ -1,5 +1,3 @@
-library shared;
-
 // Models
 export 'src/models/user_model.dart';
 export 'src/models/todo_model.dart';

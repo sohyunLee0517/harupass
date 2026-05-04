@@ -1,11 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'daily_state_model.g.dart';
 
 enum StampType { normal, milestone }
 
-@JsonSerializable()
 class DailyStateModel {
   final bool allCompleted;
   final DateTime? lockReleasedAt;
@@ -18,8 +14,21 @@ class DailyStateModel {
   });
 
   factory DailyStateModel.fromJson(Map<String, dynamic> json) =>
-      _$DailyStateModelFromJson(json);
-  Map<String, dynamic> toJson() => _$DailyStateModelToJson(this);
+      DailyStateModel(
+        allCompleted: json['allCompleted'] as bool? ?? false,
+        lockReleasedAt: json['lockReleasedAt'] != null
+            ? DateTime.parse(json['lockReleasedAt'] as String)
+            : null,
+        stampType: json['stampType'] != null
+            ? StampType.values.byName(json['stampType'] as String)
+            : null,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'allCompleted': allCompleted,
+        'lockReleasedAt': lockReleasedAt?.toIso8601String(),
+        'stampType': stampType?.name,
+      };
 
   factory DailyStateModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;

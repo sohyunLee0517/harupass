@@ -1,11 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-part 'league_model.g.dart';
 
 enum LeagueResult { promoted, stayed, demoted }
 
-@JsonSerializable()
 class LeagueGroupModel {
   final String id;
   final String league;
@@ -22,15 +18,33 @@ class LeagueGroupModel {
   });
 
   factory LeagueGroupModel.fromJson(Map<String, dynamic> json) =>
-      _$LeagueGroupModelFromJson(json);
-  Map<String, dynamic> toJson() => _$LeagueGroupModelToJson(this);
+      LeagueGroupModel(
+        id: json['id'] as String,
+        league: json['league'] as String,
+        userIds: (json['userIds'] as List<dynamic>)
+            .map((e) => e as String)
+            .toList(),
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        finalizedAt: json['finalizedAt'] != null
+            ? DateTime.parse(json['finalizedAt'] as String)
+            : null,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'league': league,
+        'userIds': userIds,
+        'createdAt': createdAt.toIso8601String(),
+        'finalizedAt': finalizedAt?.toIso8601String(),
+      };
 
   factory LeagueGroupModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return LeagueGroupModel.fromJson({
       'id': doc.id,
       ...data,
-      'createdAt': (data['createdAt'] as Timestamp).toDate().toIso8601String(),
+      'createdAt':
+          (data['createdAt'] as Timestamp).toDate().toIso8601String(),
       if (data['finalizedAt'] != null)
         'finalizedAt':
             (data['finalizedAt'] as Timestamp).toDate().toIso8601String(),
@@ -38,7 +52,6 @@ class LeagueGroupModel {
   }
 }
 
-@JsonSerializable()
 class LeagueRankingModel {
   final String userId;
   final int rank;
@@ -57,6 +70,23 @@ class LeagueRankingModel {
   });
 
   factory LeagueRankingModel.fromJson(Map<String, dynamic> json) =>
-      _$LeagueRankingModelFromJson(json);
-  Map<String, dynamic> toJson() => _$LeagueRankingModelToJson(this);
+      LeagueRankingModel(
+        userId: json['userId'] as String,
+        rank: json['rank'] as int,
+        weeklyScore: json['weeklyScore'] as int,
+        nickname: json['nickname'] as String,
+        profileEmoji: json['profileEmoji'] as String,
+        result: json['result'] != null
+            ? LeagueResult.values.byName(json['result'] as String)
+            : null,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'userId': userId,
+        'rank': rank,
+        'weeklyScore': weeklyScore,
+        'nickname': nickname,
+        'profileEmoji': profileEmoji,
+        'result': result?.name,
+      };
 }
