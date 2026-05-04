@@ -37,7 +37,16 @@ class UserRepository {
     });
   }
 
-  /// 관리자의 관리대상 목록 조���
+  /// 이메일 중복 확인 (Firestore에서 직접 조회)
+  Future<bool> isEmailTaken(String email) async {
+    final snapshot = await _usersRef
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+    return snapshot.docs.isNotEmpty;
+  }
+
+  /// 관리자의 관리대상 목록 조회
   Future<List<UserModel>> getSubjects(String adminId) async {
     final adminDoc = await getUser(adminId);
     if (adminDoc == null || adminDoc.subjectIds.isEmpty) return [];

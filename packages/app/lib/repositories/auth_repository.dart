@@ -45,17 +45,6 @@ class AuthRepository {
     return await _auth.signInAnonymously();
   }
 
-  /// 이메일 중복 확인 (가입 시도로 확인)
-  Future<bool> isEmailAvailable(String email) async {
-    try {
-      // 임시 비밀번호로 가입 시도하여 이메일 존재 여부 확인
-      final methods = await _auth.fetchSignInMethodsForEmail(email);
-      return methods.isEmpty;
-    } catch (_) {
-      return true; // 에러 시 사용 가능으로 처리
-    }
-  }
-
   Future<void> signOut() async {
     await _auth.signOut();
   }

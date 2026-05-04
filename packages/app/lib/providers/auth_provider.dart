@@ -190,14 +190,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// 이메일 중복 확인
+  /// 이메일 중복 확인 (Firestore 조회)
   Future<bool> isEmailAvailable(String email) async {
-    return await _authRepo.isEmailAvailable(email);
+    final taken = await _userRepo.isEmailTaken(email);
+    return !taken;
   }
 
-  /// 관리대상 아이디 중복 확인
+  /// 관리대상 아이디 중복 확인 (Firestore 조회)
   Future<bool> isSubjectIdAvailable(String loginId) async {
-    return await _authRepo.isEmailAvailable(subjectIdToEmail(loginId));
+    final email = subjectIdToEmail(loginId);
+    final taken = await _userRepo.isEmailTaken(email);
+    return !taken;
   }
 
   /// 관리자 전용 로그아웃
