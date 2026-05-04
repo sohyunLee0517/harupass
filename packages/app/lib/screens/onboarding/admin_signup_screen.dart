@@ -13,24 +13,61 @@ class AdminSignupScreen extends ConsumerStatefulWidget {
 
 class _AdminSignupScreenState extends ConsumerState<AdminSignupScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _nicknameController = TextEditingController();
   final _emailController = TextEditingController();
   bool _isLoading = false;
+  bool _isCheckingEmail = false;
+  bool? _isEmailAvailable;
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _nicknameController.dispose();
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkEmailDuplicate() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) return;
+
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    if (!emailRegex.hasMatch(email)) {
+      _formKey.currentState?.validate();
+      return;
+    }
+
+    setState(() {
+      _isCheckingEmail = true;
+      _isEmailAvailable = null;
+    });
+
+    try {
+      // TODO: Firebase에서 실제 중복 확인
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        setState(() => _isEmailAvailable = true);
+      }
+    } finally {
+      if (mounted) setState(() => _isCheckingEmail = false);
+    }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (_isEmailAvailable != true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('이메일 중복확인을 해주세요')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       await ref.read(authProvider.notifier).signInAsAdmin(
-            name: _nameController.text.trim(),
+            name: _nicknameController.text.trim(),
             email: _emailController.text.trim(),
           );
     } finally {
@@ -66,38 +103,101 @@ class _AdminSignupScreenState extends ConsumerState<AdminSignupScreen> {
                 ),
                 const SizedBox(height: 32),
                 TextFormField(
-                  controller: _nameController,
+                  controller: _nicknameController,
                   decoration: const InputDecoration(
-                    labelText: '이름',
-                    hintText: '이름을 입력하세요',
+                    labelText: '별명',
+                    hintText: '별명을 입력하세요',
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return '이름을 입력해주세요';
+                      return '별명을 입력해주세요';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: '이메일',
-                    hintText: 'example@email.com',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return '이메일을 입력해주세요';
-                    }
-                    if (!value.contains('@')) {
-                      return '올바른 이메일 형식이 아닙니다';
-                    }
-                    return null;
-                  },
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        onChanged: (_) {
+                          if (_isEmailAvailable != null) {
+                            setState(() => _isEmailAvailable = null);
+                          }
+                        },
+                        decoration: InputDecoration(
+                          labelText: '이메일',
+                          hintText: 'example@email.com',
+                          border: const OutlineInputBorder(),
+                          suffixIcon: _isEmailAvailable == true
+                              ? const Icon(Icons.check_circle,
+                                  color: AppColors.success)
+                              : null,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return '이메일을 입력해주세요';
+                          }
+                          final emailRegex = RegExp(
+                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                          );
+                          if (!emailRegex.hasMatch(value.trim())) {
+                            return '올바른 이메일 형식이 아닙니다';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      height: 56,
+                      child: OutlinedButton(
+                        onPressed:
+                            _isCheckingEmail ? null : _checkEmailDuplicate,
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppColors.primary),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: _isCheckingEmail
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('중복확인'),
+                      ),
+                    ),
+                  ],
                 ),
+                if (_isEmailAvailable == true)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      '사용 가능한 이메일입니다',
+                      style: TextStyle(
+                        color: AppColors.success,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                if (_isEmailAvailable == false)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      '이미 사용 중인 이메일입니다',
+                      style: TextStyle(
+                        color: AppColors.error,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 32),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _submit,
